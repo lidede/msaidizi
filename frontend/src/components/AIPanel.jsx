@@ -1,9 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function AIPanel() {
+export default function AIPanel({ pendingPrompt, onPromptConsumed }) {
   const [chatInput, setChatInput] = useState("");
   const [chatReply, setChatReply] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+
+  useEffect(() => {
+    if (!pendingPrompt) return;
+    setChatInput(pendingPrompt);
+    onPromptConsumed();
+    // auto-send
+    setChatLoading(true);
+    setChatReply("");
+    fetch("/api/ai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: pendingPrompt }),
+    })
+      .then(r => r.json())
+      .then(d => setChatReply(d.reply || d.detail || "No response"))
+      .catch(() => setChatReply("Error reaching server."))
+      .finally(() => setChatLoading(false));
+  }, [pendingPrompt]);
 
   const [weather, setWeather] = useState("");
   const [suggestion, setSuggestion] = useState("");

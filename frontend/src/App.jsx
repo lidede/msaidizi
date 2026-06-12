@@ -7,6 +7,12 @@ const TABS = ["Agents", "Chores", "AI"];
 
 export default function App() {
   const [tab, setTab] = useState("Agents");
+  const [pendingPrompt, setPendingPrompt] = useState("");
+
+  function firePrompt(prompt) {
+    setPendingPrompt(prompt);
+    setTab("AI");
+  }
 
   return (
     <div>
@@ -28,9 +34,9 @@ export default function App() {
         </nav>
       </header>
 
-      {tab === "Agents" && <Dashboard />}
+      {tab === "Agents" && <Dashboard onPrompt={firePrompt} />}
       {tab === "Chores" && <ChoresPanel />}
-      {tab === "AI"     && <AIPanel />}
+      {tab === "AI"     && <AIPanel pendingPrompt={pendingPrompt} onPromptConsumed={() => setPendingPrompt("")} />}
     </div>
   );
 }

@@ -9,7 +9,7 @@ const STATUS_META = {
 
 const FILTERS = ["all", "live", "connected", "partial", "planned"];
 
-export default function Dashboard() {
+export default function Dashboard({ onPrompt }) {
   const [agents, setAgents] = useState([]);
   const [filter, setFilter] = useState("all");
 
@@ -67,14 +67,14 @@ export default function Dashboard() {
       {/* Grid */}
       <div style={styles.grid}>
         {visible.map(agent => (
-          <AgentCard key={agent.id} agent={agent} onStatusChange={updateStatus} />
+          <AgentCard key={agent.id} agent={agent} onStatusChange={updateStatus} onPrompt={onPrompt} />
         ))}
       </div>
     </div>
   );
 }
 
-function AgentCard({ agent, onStatusChange }) {
+function AgentCard({ agent, onStatusChange, onPrompt }) {
   const meta = STATUS_META[agent.status] || STATUS_META.planned;
   const statuses = ["planned", "partial", "connected", "live"];
 
@@ -94,6 +94,11 @@ function AgentCard({ agent, onStatusChange }) {
       </div>
       <div style={styles.cardName}>{agent.name}</div>
       <div style={styles.cardDesc}>{agent.description}</div>
+      {agent.prompt && (
+        <button style={styles.promptBtn} onClick={() => onPrompt(agent.prompt)}>
+          → {agent.prompt}
+        </button>
+      )}
     </div>
   );
 }
@@ -160,5 +165,20 @@ const styles = {
     cursor: "pointer",
   },
   cardName: { fontSize: "13px", fontWeight: 500, marginBottom: "4px" },
-  cardDesc: { fontSize: "11px", color: "var(--color-text-muted)", lineHeight: 1.5 },
+  cardDesc: { fontSize: "11px", color: "var(--color-text-muted)", lineHeight: 1.5, marginBottom: "10px" },
+  promptBtn: {
+    width: "100%",
+    textAlign: "left",
+    fontSize: "11px",
+    padding: "5px 8px",
+    border: "1px solid var(--color-border)",
+    borderRadius: "var(--radius-sm)",
+    background: "transparent",
+    color: "var(--color-text-muted)",
+    cursor: "pointer",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    transition: "background 0.1s, color 0.1s",
+  },
 };
