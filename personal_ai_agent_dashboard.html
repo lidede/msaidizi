@@ -1,0 +1,106 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .header { padding: 1.5rem 0 1rem; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 1.5rem; }
+  .header h1 { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .filter-btn { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; }
+  .filter-btn.active, .filter-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); border-color: var(--color-border-primary); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 14px; cursor: pointer; transition: border-color 0.15s, transform 0.1s; position: relative; }
+  .card:hover { border-color: var(--color-border-primary); transform: translateY(-1px); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .icon { font-size: 20px; line-height: 1; }
+  .badge { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 10px; }
+  .badge-live { background: #EAF3DE; color: #3B6D11; }
+  .badge-partial { background: #FAEEDA; color: #854F0B; }
+  .badge-planned { background: #EEEDFE; color: #534AB7; }
+  .badge-connected { background: #E6F1FB; color: #185FA5; }
+  .card-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .card-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.5; }
+  .card-action { margin-top: 10px; }
+  .action-btn { font-size: 11px; padding: 5px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; background: transparent; color: var(--color-text-secondary); cursor: pointer; width: 100%; text-align: left; transition: background 0.1s; }
+  .action-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px; }
+  .stat-num { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-label { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  @media (max-width: 500px) { .stats { grid-template-columns: repeat(2,1fr); } }
+</style>
+
+<h2 class="sr-only">Personal AI agent dashboard showing 17 automations and their current status</h2>
+
+<div class="header">
+  <h1>Personal agent HQ</h1>
+  <p>Your 17 automations — what's live, what's next, what's planned</p>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num">1</div><div class="stat-label">Live</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Connected</div></div>
+  <div class="stat"><div class="stat-num">2</div><div class="stat-label">Partial</div></div>
+  <div class="stat"><div class="stat-num">11</div><div class="stat-label">Planned</div></div>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filterCards('all', this)">All (17)</button>
+  <button class="filter-btn" onclick="filterCards('live', this)">Live</button>
+  <button class="filter-btn" onclick="filterCards('connected', this)">Connected</button>
+  <button class="filter-btn" onclick="filterCards('partial', this)">Partial</button>
+  <button class="filter-btn" onclick="filterCards('planned', this)">Planned</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const agents = [
+  { id: 1, icon: "✓", name: "Todo manager", status: "live", desc: "Task capture, tracking & nudges", prompt: "Open my todo list" },
+  { id: 2, icon: "📅", name: "Family calendar", status: "connected", desc: "Shared family schedule via Google Calendar", prompt: "Show me this week's family calendar" },
+  { id: 3, icon: "📧", name: "Email assistant", status: "connected", desc: "Scan Gmail for todos & calendar events", prompt: "Scan my email for todos and calendar events" },
+  { id: 4, icon: "📝", name: "Note taker & researcher", status: "partial", desc: "Idea → context → async research", prompt: "Help me research an idea" },
+  { id: 5, icon: "🛒", name: "Wishlist manager", status: "planned", desc: "Track items & price changes over time", prompt: "Help me build a wishlist tracker" },
+  { id: 6, icon: "📊", name: "Activity tracker", status: "planned", desc: "Tasks, health & social balance nudges", prompt: "What should I track for my activity?" },
+  { id: 7, icon: "🧠", name: "ADHD coach", status: "partial", desc: "Accountability without judgment", prompt: "Be my ADHD coach today" },
+  { id: 8, icon: "🏠", name: "Home chores manager", status: "planned", desc: "Patterns → reminders → todos", prompt: "Set up my home chores routine" },
+  { id: 9, icon: "📈", name: "Investment tracker", status: "planned", desc: "IBKR read-only + news-driven advice", prompt: "How should I set up my investment tracker?" },
+  { id: 10, icon: "📰", name: "Newsman", status: "planned", desc: "Curated feeds from your fave sources", prompt: "What should my news sources be?" },
+  { id: 11, icon: "🗺️", name: "Busyman (Haarlem)", status: "planned", desc: "Local events, weather + what's on", prompt: "What's happening in Haarlem this weekend?" },
+  { id: 12, icon: "✈️", name: "Travel planner", status: "planned", desc: "Wishlist places + trip inspiration", prompt: "Show me my travel wishlist" },
+  { id: 13, icon: "💡", name: "Ideaman", status: "planned", desc: "Fresh ideas outside your bubble", prompt: "Give me 3 ideas I wouldn't normally think of" },
+  { id: 14, icon: "🎓", name: "Edu (Dutch + tech)", status: "planned", desc: "Daily tidbits — language & tech", prompt: "Teach me something in Dutch today" },
+  { id: 15, icon: "📷", name: "Photoman", status: "planned", desc: "Library organiser & memory maker", prompt: "How can I organise my photo library?" },
+  { id: 16, icon: "💾", name: "Backupman", status: "planned", desc: "Scheduled, automated backups", prompt: "Help me set up a backup schedule" },
+  { id: 17, icon: "🏦", name: "Bankman", status: "planned", desc: "Spending patterns & financial insights", prompt: "Help me set up spending tracking" },
+];
+
+const statusClass = { live: "badge-live", connected: "badge-connected", partial: "badge-partial", planned: "badge-planned" };
+const statusLabel = { live: "Live ✓", connected: "Connected", partial: "Partial", planned: "Planned" };
+
+function renderCards(filter) {
+  const grid = document.getElementById("grid");
+  const filtered = filter === "all" ? agents : agents.filter(a => a.status === filter);
+  grid.innerHTML = filtered.map(a => `
+    <div class="card" data-status="${a.status}">
+      <div class="card-top">
+        <span class="icon">${a.icon}</span>
+        <span class="badge ${statusClass[a.status]}">${statusLabel[a.status]}</span>
+      </div>
+      <div class="card-name">${a.name}</div>
+      <div class="card-desc">${a.desc}</div>
+      <div class="card-action">
+        <button class="action-btn" onclick="sendPrompt('${a.prompt}')">→ ${a.prompt}</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterCards(filter, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderCards(filter);
+}
+
+renderCards("all");
+</script>

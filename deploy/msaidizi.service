@@ -1,0 +1,14 @@
+[Unit]
+Description=Msaidizi FastAPI backend
+After=network.target
+
+[Service]
+User=msaidizi
+WorkingDirectory=/opt/msaidizi/backend
+EnvironmentFile=/opt/msaidizi/backend/.env
+ExecStart=/opt/msaidizi/backend/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
