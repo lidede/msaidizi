@@ -9,7 +9,20 @@ const STATUS_META = {
 
 const FILTERS = ["all", "live", "connected", "partial", "planned"];
 
-export default function Dashboard({ onPrompt }) {
+// Maps agent name → panel key. Agents without an entry fall back to AI chat.
+const PANEL_MAP = {
+  "Todo manager":          "todo",
+  "Family calendar":       "calendar",
+  "Email assistant":       "gmail",
+  "ADHD coach":            "adhd",
+  "Home chores manager":   "chores",
+  "Newsman":               "news",
+  "Busyman (Haarlem)":     "weather",
+  "Ideaman":               "ideaman",
+  "Edu (Dutch + tech)":    "edu",
+};
+
+export default function Dashboard({ onOpenPanel, onPrompt }) {
   const [agents, setAgents] = useState([]);
   const [filter, setFilter] = useState("all");
 
@@ -41,7 +54,6 @@ export default function Dashboard({ onPrompt }) {
 
   return (
     <div>
-      {/* Stats */}
       <div style={styles.stats}>
         {Object.entries({ live: "Live", connected: "Connected", partial: "Partial", planned: "Planned" }).map(([k, label]) => (
           <div key={k} style={styles.stat}>
@@ -51,7 +63,6 @@ export default function Dashboard({ onPrompt }) {
         ))}
       </div>
 
-      {/* Filters */}
       <div style={styles.filters}>
         {FILTERS.map(f => (
           <button
@@ -64,28 +75,44 @@ export default function Dashboard({ onPrompt }) {
         ))}
       </div>
 
-      {/* Grid */}
       <div style={styles.grid}>
         {visible.map(agent => (
-          <AgentCard key={agent.id} agent={agent} onStatusChange={updateStatus} onPrompt={onPrompt} />
+          <AgentCard
+            key={agent.id}
+            agent={agent}
+            panelKey={PANEL_MAP[agent.name]}
+            onStatusChange={updateStatus}
+            onOpenPanel={onOpenPanel}
+            onPrompt={onPrompt}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function AgentCard({ agent, onStatusChange, onPrompt }) {
+function AgentCard({ agent, panelKey, onStatusChange, onOpenPanel, onPrompt }) {
   const meta = STATUS_META[agent.status] || STATUS_META.planned;
   const statuses = ["planned", "partial", "connected", "live"];
+  const hasPanel = Boolean(panelKey);
+
+  function handleAction() {
+    if (hasPanel) onOpenPanel(panelKey, agent);
+    else if (agent.prompt) onPrompt(agent.prompt);
+  }
 
   return (
-    <div style={styles.card}>
+    <div
+      style={{ ...styles.card, cursor: hasPanel ? "pointer" : "default" }}
+      onClick={hasPanel ? handleAction : undefined}
+    >
       <div style={styles.cardTop}>
         <span style={styles.icon}>{agent.icon}</span>
         <select
           style={{ ...styles.badge, background: meta.bg, color: meta.color }}
           value={agent.status}
-          onChange={e => onStatusChange(agent.id, e.target.value)}
+          onClick={e => e.stopPropagation()}
+          onChange={e => { e.stopPropagation(); onStatusChange(agent.id, e.target.value); }}
         >
           {statuses.map(s => (
             <option key={s} value={s}>{STATUS_META[s].label}</option>
@@ -95,8 +122,11 @@ function AgentCard({ agent, onStatusChange, onPrompt }) {
       <div style={styles.cardName}>{agent.name}</div>
       <div style={styles.cardDesc}>{agent.description}</div>
       {agent.prompt && (
-        <button style={styles.promptBtn} onClick={() => onPrompt(agent.prompt)}>
-          → {agent.prompt}
+        <button
+          style={{ ...styles.promptBtn, ...(hasPanel ? styles.promptBtnActive : {}) }}
+          onClick={e => { e.stopPropagation(); handleAction(); }}
+        >
+          {hasPanel ? `→ Open` : `→ ${agent.prompt}`}
         </button>
       )}
     </div>
@@ -104,81 +134,20 @@ function AgentCard({ agent, onStatusChange, onPrompt }) {
 }
 
 const styles = {
-  stats: {
-    display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
-    gap: "10px",
-    marginBottom: "1.5rem",
-  },
-  stat: {
-    background: "var(--color-bg-secondary)",
-    borderRadius: "var(--radius-md)",
-    padding: "12px 14px",
-  },
+  stats: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", marginBottom: "1.5rem" },
+  stat: { background: "var(--color-bg-secondary)", borderRadius: "var(--radius-md)", padding: "12px 14px" },
   statNum: { fontSize: "22px", fontWeight: 500 },
   statLabel: { fontSize: "11px", color: "var(--color-text-muted)", marginTop: "2px" },
-  filters: {
-    display: "flex",
-    gap: "8px",
-    marginBottom: "1.25rem",
-    flexWrap: "wrap",
-  },
-  filterBtn: {
-    fontSize: "12px",
-    padding: "5px 14px",
-    borderRadius: "20px",
-    border: "1px solid var(--color-border)",
-    background: "transparent",
-    color: "var(--color-text-muted)",
-    transition: "all 0.15s",
-  },
-  filterBtnActive: {
-    background: "var(--color-bg-secondary)",
-    color: "var(--color-text)",
-    borderColor: "#999",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
-    gap: "10px",
-  },
-  card: {
-    background: "var(--color-bg)",
-    border: "1px solid var(--color-border-light)",
-    borderRadius: "var(--radius-lg)",
-    padding: "14px",
-    transition: "border-color 0.15s",
-  },
-  cardTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "10px",
-  },
+  filters: { display: "flex", gap: "8px", marginBottom: "1.25rem", flexWrap: "wrap" },
+  filterBtn: { fontSize: "12px", padding: "5px 14px", borderRadius: "20px", border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", transition: "all 0.15s" },
+  filterBtnActive: { background: "var(--color-bg-secondary)", color: "var(--color-text)", borderColor: "#999" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: "10px" },
+  card: { background: "var(--color-bg)", border: "1px solid var(--color-border-light)", borderRadius: "var(--radius-lg)", padding: "14px", transition: "border-color 0.15s" },
+  cardTop: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" },
   icon: { fontSize: "20px", lineHeight: 1 },
-  badge: {
-    fontSize: "10px",
-    fontWeight: 500,
-    padding: "3px 8px",
-    borderRadius: "10px",
-    border: "none",
-    cursor: "pointer",
-  },
+  badge: { fontSize: "10px", fontWeight: 500, padding: "3px 8px", borderRadius: "10px", border: "none", cursor: "pointer" },
   cardName: { fontSize: "13px", fontWeight: 500, marginBottom: "4px" },
   cardDesc: { fontSize: "11px", color: "var(--color-text-muted)", lineHeight: 1.5, marginBottom: "10px" },
-  promptBtn: {
-    width: "100%",
-    textAlign: "left",
-    fontSize: "11px",
-    padding: "5px 8px",
-    border: "1px solid var(--color-border)",
-    borderRadius: "var(--radius-sm)",
-    background: "transparent",
-    color: "var(--color-text-muted)",
-    cursor: "pointer",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    transition: "background 0.1s, color 0.1s",
-  },
+  promptBtn: { width: "100%", textAlign: "left", fontSize: "11px", padding: "5px 8px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", background: "transparent", color: "var(--color-text-muted)", cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "background 0.1s, color 0.1s" },
+  promptBtnActive: { background: "var(--color-accent)", color: "white", border: "1px solid var(--color-accent)" },
 };
