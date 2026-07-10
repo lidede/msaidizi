@@ -38,10 +38,16 @@ INITIAL_AGENTS = [
 async def lifespan(app: FastAPI):
     create_db()
     with Session(engine) as session:
-        if not session.exec(select(Agent)).first():
-            for a in INITIAL_AGENTS:
-                session.add(a)
-            session.commit()
+        for agent_def in INITIAL_AGENTS:
+            existing = session.exec(select(Agent).where(Agent.name == agent_def.name)).first()
+            if existing:
+                existing.icon = agent_def.icon
+                existing.status = agent_def.status
+                existing.description = agent_def.description
+                existing.prompt = agent_def.prompt
+            else:
+                session.add(agent_def)
+        session.commit()
     yield
 
 
