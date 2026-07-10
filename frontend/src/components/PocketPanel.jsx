@@ -23,7 +23,7 @@ export default function PocketPanel() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [aiSummary, setAiSummary] = useState("");
+  const [aiTopics, setAiTopics] = useState(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [extractedTasks, setExtractedTasks] = useState(null);
   const [extractLoading, setExtractLoading] = useState(false);
@@ -41,12 +41,12 @@ export default function PocketPanel() {
 
   async function aiSummarise(id) {
     setAiSummaryLoading(true);
-    setAiSummary("");
+    setAiTopics(null);
     try {
       const r = await fetch(`/api/pocket/recordings/${id}/ai/summarise`, { method: "POST" });
       const d = await r.json();
-      setAiSummary(d.summary || d.detail || "No summary returned");
-    } catch { setAiSummary("Error reaching server."); }
+      setAiTopics(d.topics || []);
+    } catch { setAiTopics([]); }
     finally { setAiSummaryLoading(false); }
   }
 
@@ -64,7 +64,7 @@ export default function PocketPanel() {
   async function openRecording(rec) {
     setSelected(rec);
     setDetail(null);
-    setAiSummary("");
+    setAiTopics(null);
     setExtractedTasks(null);
     setDetailLoading(true);
     try {
@@ -119,10 +119,22 @@ export default function PocketPanel() {
           </button>
         </div>
 
-        {aiSummary && (
+        {aiTopics && (
           <section style={s.section}>
-            <div style={s.sectionLabel}>AI Summary</div>
-            <p style={s.body}>{aiSummary}</p>
+            <div style={s.sectionLabel}>Summary</div>
+            {aiTopics.length === 0
+              ? <p style={s.muted}>No topics found.</p>
+              : aiTopics.map((topic, i) => (
+                <div key={i} style={s.topic}>
+                  <div style={s.topicTitle}>{topic.title}</div>
+                  <ul style={s.topicList}>
+                    {(topic.points || []).map((pt, j) => (
+                      <li key={j} style={s.topicPoint}>{pt}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))
+            }
           </section>
         )}
 
@@ -235,6 +247,10 @@ const s = {
   sectionLabel: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-text-muted)", marginBottom: "8px" },
   body: { fontSize: "13px", lineHeight: 1.6, margin: 0, overflowWrap: "break-word", wordBreak: "break-word" },
   transcript: { fontSize: "12px", lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, maxHeight: "420px", overflowY: "auto" },
+  topic: { marginBottom: "12px" },
+  topicTitle: { fontSize: "12px", fontWeight: 600, marginBottom: "4px", color: "var(--color-text)" },
+  topicList: { margin: 0, paddingLeft: "18px" },
+  topicPoint: { fontSize: "13px", lineHeight: 1.6, color: "var(--color-text)", overflowWrap: "break-word", wordBreak: "break-word", marginBottom: "2px" },
   aiRow: { display: "flex", gap: "8px" },
   btnAi: { padding: "7px 14px", fontSize: "13px", background: "transparent", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", cursor: "pointer", color: "var(--color-text-muted)", whiteSpace: "nowrap" },
   taskRow: { display: "flex", alignItems: "flex-start", gap: "10px", padding: "6px 0", borderBottom: "1px solid var(--color-border-light)" },

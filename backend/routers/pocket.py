@@ -75,13 +75,23 @@ def search_recordings(body: SearchBody):
 @router.post("/recordings/{recording_id}/ai/summarise")
 def ai_summarise(recording_id: str):
     title, text = _get_transcript(recording_id)
-    prompt = f"""Write a summary of the following meeting/conversation titled "{title}".
+    prompt = f"""Summarise the meeting/conversation titled "{title}" by grouping it into the main topics discussed.
 
-STRICT RULES — failure to follow these will make the response useless:
-- Write in plain prose paragraphs only. No bullet points. No numbered lists. No headers. No markdown formatting of any kind (no **, no *, no #).
-- 2 to 4 paragraphs maximum.
-- Cover: what was discussed, decisions made, and key outcomes.
-- Write as if briefing a colleague who wasn't in the meeting.
+Return ONLY a valid JSON object with no extra text, in this exact format:
+{{
+  "topics": [
+    {{
+      "title": "Topic name",
+      "points": ["key point", "key point", "key point"]
+    }}
+  ]
+}}
+
+Rules:
+- 3 to 6 topics maximum
+- 2 to 5 bullet points per topic
+- Keep each point concise (one sentence)
+- Topic titles should be short (2-5 words)
 
 Transcript:
 {text[:6000]}"""
@@ -89,7 +99,17 @@ Transcript:
         model=_model(),
         messages=[{"role": "user", "content": prompt}],
     )
-    return {"summary": resp.choices[0].message.content}
+    raw = resp.choices[0].message.content.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+    raw = raw.strip()
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        return {"topics": [], "raw": raw}
+    return {"topics": parsed.get("topics", [])}
 
 
 @router.post("/recordings/{recording_id}/ai/extract-tasks")
