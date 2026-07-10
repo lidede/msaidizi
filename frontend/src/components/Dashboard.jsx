@@ -20,6 +20,7 @@ const PANEL_MAP = {
   "Busyman (Haarlem)":     "weather",
   "Ideaman":               "ideaman",
   "Edu (Dutch + tech)":    "edu",
+  "Note taker & researcher": "pocket",
 };
 
 export default function Dashboard({ onOpenPanel, onPrompt }) {

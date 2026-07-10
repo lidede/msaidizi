@@ -11,13 +11,13 @@ from database import create_db, engine
 from models import Agent
 from sqlmodel import Session, select
 from routers import agents, chores, ai
-from routers import todos, adhd, ideaman, edu, weather, news, gcalendar, gmail
+from routers import todos, adhd, ideaman, edu, weather, news, gcalendar, gmail, pocket
 
 INITIAL_AGENTS = [
     Agent(icon="✓",  name="Todo manager",           status="live",      description="Task capture, tracking & AI prioritisation",        prompt="Open my todo list"),
     Agent(icon="📅", name="Family calendar",         status="connected", description="Shared family schedule via Google Calendar",         prompt="Show me this week's family calendar"),
     Agent(icon="📧", name="Email assistant",         status="connected", description="Scan Gmail for todos & calendar events",             prompt="Scan my email for todos and calendar events"),
-    Agent(icon="📝", name="Note taker & researcher", status="partial",   description="Idea → context → async research",                    prompt="Help me research an idea"),
+    Agent(icon="📝", name="Note taker & researcher", status="live",      description="Pocket recordings — transcripts, summaries & search", prompt="Open my recordings"),
     Agent(icon="🛒", name="Wishlist manager",        status="planned",   description="Track items & price changes over time",              prompt="Help me build a wishlist tracker"),
     Agent(icon="📊", name="Activity tracker",        status="planned",   description="Tasks, health & social balance nudges",              prompt="What should I track for my activity?"),
     Agent(icon="🧠", name="ADHD coach",              status="live",      description="Focus plans, task breakdown & accountability",        prompt="Be my ADHD coach today"),
@@ -65,6 +65,7 @@ app.include_router(weather.router)
 app.include_router(news.router)
 app.include_router(gcalendar.router)
 app.include_router(gmail.router)
+app.include_router(pocket.router)
 
 # Serve built frontend in production
 frontend_dist = Path(__file__).parent.parent / "frontend" / "dist"

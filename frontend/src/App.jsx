@@ -10,6 +10,7 @@ import WeatherPanel from "./components/WeatherPanel";
 import NewsPanel from "./components/NewsPanel";
 import CalendarPanel from "./components/CalendarPanel";
 import GmailPanel from "./components/GmailPanel";
+import PocketPanel from "./components/PocketPanel";
 
 const PANEL_META = {
   todo:     { icon: "✓",  title: "Todo manager" },
@@ -21,6 +22,7 @@ const PANEL_META = {
   news:     { icon: "📰", title: "Newsman" },
   calendar: { icon: "📅", title: "Family calendar" },
   gmail:    { icon: "📧", title: "Email assistant" },
+  pocket:   { icon: "📝", title: "Pocket recordings" },
   ai:       { icon: "✦",  title: "Ask GreenPT" },
 };
 
@@ -35,6 +37,7 @@ function PanelContent({ panelKey, pendingPrompt, onPromptConsumed }) {
     case "news":     return <NewsPanel />;
     case "calendar": return <CalendarPanel />;
     case "gmail":    return <GmailPanel />;
+    case "pocket":   return <PocketPanel />;
     case "ai":       return <AIPanel pendingPrompt={pendingPrompt} onPromptConsumed={onPromptConsumed} />;
     default:         return null;
   }
