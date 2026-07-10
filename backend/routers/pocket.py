@@ -75,7 +75,13 @@ def search_recordings(body: SearchBody):
 @router.post("/recordings/{recording_id}/ai/summarise")
 def ai_summarise(recording_id: str):
     title, text = _get_transcript(recording_id)
-    prompt = f"""Write a concise prose summary (2-4 paragraphs) of the following meeting/conversation titled "{title}". Cover what was discussed, any decisions made, and key outcomes. Write in plain English as if briefing someone who wasn't there.
+    prompt = f"""Write a summary of the following meeting/conversation titled "{title}".
+
+STRICT RULES — failure to follow these will make the response useless:
+- Write in plain prose paragraphs only. No bullet points. No numbered lists. No headers. No markdown formatting of any kind (no **, no *, no #).
+- 2 to 4 paragraphs maximum.
+- Cover: what was discussed, decisions made, and key outcomes.
+- Write as if briefing a colleague who wasn't in the meeting.
 
 Transcript:
 {text[:6000]}"""
