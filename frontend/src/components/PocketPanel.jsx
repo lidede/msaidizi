@@ -122,7 +122,7 @@ export default function PocketPanel() {
         {aiSummary && (
           <section style={s.section}>
             <div style={s.sectionLabel}>AI Summary</div>
-            <pre style={s.body}>{aiSummary}</pre>
+            <p style={s.body}>{aiSummary}</p>
           </section>
         )}
 

@@ -75,7 +75,7 @@ def search_recordings(body: SearchBody):
 @router.post("/recordings/{recording_id}/ai/summarise")
 def ai_summarise(recording_id: str):
     title, text = _get_transcript(recording_id)
-    prompt = f"""Summarise this meeting/conversation recording titled "{title}" in 3-5 concise bullet points. Focus on key decisions, outcomes, and important context.
+    prompt = f"""Write a concise prose summary (2-4 paragraphs) of the following meeting/conversation titled "{title}". Cover what was discussed, any decisions made, and key outcomes. Write in plain English as if briefing someone who wasn't there.
 
 Transcript:
 {text[:6000]}"""
