@@ -83,13 +83,15 @@ export default function PocketPanel() {
             {detail.summary && (
               <section style={s.section}>
                 <div style={s.sectionLabel}>Summary</div>
-                <p style={s.body}>{detail.summary}</p>
+                <p style={s.body}>{typeof detail.summary === "object" ? detail.summary.text : detail.summary}</p>
               </section>
             )}
             {detail.transcript && (
               <section style={s.section}>
                 <div style={s.sectionLabel}>Transcript</div>
-                <pre style={s.transcript}>{detail.transcript}</pre>
+                <pre style={s.transcript}>
+                  {typeof detail.transcript === "object" ? detail.transcript.text : detail.transcript}
+                </pre>
               </section>
             )}
             {!detail.summary && !detail.transcript && (
