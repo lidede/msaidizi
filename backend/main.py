@@ -27,7 +27,7 @@ INITIAL_AGENTS = [
     Agent(icon="🗺️", name="Busyman (Haarlem)",       status="live",      description="Live weather + 5-day forecast for Haarlem",          prompt="What's happening in Haarlem this weekend?"),
     Agent(icon="✈️", name="Travel planner",          status="planned",   description="Wishlist places + trip inspiration",                 prompt="Show me my travel wishlist"),
     Agent(icon="💡", name="Ideaman",                 status="live",      description="Fresh ideas outside your bubble",                    prompt="Give me 3 ideas I wouldn't normally think of"),
-    Agent(icon="🎓", name="Edu (Dutch + tech)",      status="live",      description="Daily Dutch lessons & tech tidbits",                 prompt="Teach me something in Dutch today"),
+    Agent(icon="🎓", name="Edu (Dutch + tech)",      status="live",      description="Daily Dutch, French & tech lessons — rotates by day",  prompt="Teach me something today"),
     Agent(icon="📷", name="Photoman",                status="planned",   description="Library organiser & memory maker",                   prompt="How can I organise my photo library?"),
     Agent(icon="💾", name="Backupman",               status="planned",   description="Scheduled, automated backups",                       prompt="Help me set up a backup schedule"),
     Agent(icon="🏦", name="Bankman",                 status="planned",   description="Spending patterns & financial insights",             prompt="Help me set up spending tracking"),

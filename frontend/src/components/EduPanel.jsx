@@ -19,6 +19,8 @@ function LessonCard({ title, content, onRefresh, loading }) {
 export default function EduPanel() {
   const [dutch, setDutch] = useState("");
   const [dutchLoading, setDutchLoading] = useState(false);
+  const [french, setFrench] = useState("");
+  const [frenchLoading, setFrenchLoading] = useState(false);
   const [tech, setTech] = useState("");
   const [techLoading, setTechLoading] = useState(false);
 
@@ -35,6 +37,16 @@ export default function EduPanel() {
       setDutch(d.lesson || d.detail || "No lesson");
     } catch { setDutch("Error reaching server."); }
     finally { setDutchLoading(false); }
+  }
+
+  async function loadFrench() {
+    setFrenchLoading(true);
+    try {
+      const res = await fetch("/api/edu/french");
+      const d = await res.json();
+      setFrench(d.lesson || d.detail || "No lesson");
+    } catch { setFrench("Error reaching server."); }
+    finally { setFrenchLoading(false); }
   }
 
   async function loadTech() {
@@ -68,6 +80,7 @@ export default function EduPanel() {
     <div style={s.container}>
       <div style={s.grid}>
         <LessonCard title="Dutch Lesson" content={dutch} onRefresh={loadDutch} loading={dutchLoading} />
+        <LessonCard title="French Lesson" content={french} onRefresh={loadFrench} loading={frenchLoading} />
         <LessonCard title="Tech Tidbit" content={tech} onRefresh={loadTech} loading={techLoading} />
       </div>
 
@@ -76,6 +89,7 @@ export default function EduPanel() {
         <form onSubmit={askQuestion} style={s.row}>
           <select style={s.select} value={subject} onChange={e => setSubject(e.target.value)}>
             <option value="dutch">Dutch</option>
+            <option value="french">French</option>
             <option value="tech">Tech</option>
           </select>
           <input style={s.input} placeholder="Ask anything…" value={question} onChange={e => setQuestion(e.target.value)} />
