@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
 
+function priorityColor(p) {
+  return p === "high" ? { background: "#FAEEDA", color: "#854F0B" }
+       : p === "low"  ? { background: "#EEEDFE", color: "#534AB7" }
+       :                { background: "#EAF3DE", color: "#3B6D11" };
+}
+
 function fmtDuration(secs) {
   if (!secs) return null;
   const m = Math.round(secs / 60);
@@ -17,6 +23,10 @@ export default function PocketPanel() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [extractedTasks, setExtractedTasks] = useState(null);
+  const [extractLoading, setExtractLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
   const [searching, setSearching] = useState(false);
@@ -29,9 +39,33 @@ export default function PocketPanel() {
       .finally(() => setLoading(false));
   }, []);
 
+  async function aiSummarise(id) {
+    setAiSummaryLoading(true);
+    setAiSummary("");
+    try {
+      const r = await fetch(`/api/pocket/recordings/${id}/ai/summarise`, { method: "POST" });
+      const d = await r.json();
+      setAiSummary(d.summary || d.detail || "No summary returned");
+    } catch { setAiSummary("Error reaching server."); }
+    finally { setAiSummaryLoading(false); }
+  }
+
+  async function extractTasks(id) {
+    setExtractLoading(true);
+    setExtractedTasks(null);
+    try {
+      const r = await fetch(`/api/pocket/recordings/${id}/ai/extract-tasks`, { method: "POST" });
+      const d = await r.json();
+      setExtractedTasks(d);
+    } catch { setExtractedTasks({ error: "Error reaching server." }); }
+    finally { setExtractLoading(false); }
+  }
+
   async function openRecording(rec) {
     setSelected(rec);
     setDetail(null);
+    setAiSummary("");
+    setExtractedTasks(null);
     setDetailLoading(true);
     try {
       const r = await fetch(`/api/pocket/recordings/${rec.id}`);
@@ -75,6 +109,43 @@ export default function PocketPanel() {
           {selected.duration ? ` · ${fmtDuration(selected.duration)}` : ""}
           {selected.language ? ` · ${selected.language.toUpperCase()}` : ""}
         </div>
+
+        <div style={s.aiRow}>
+          <button style={s.btnAi} onClick={() => aiSummarise(selected.id)} disabled={aiSummaryLoading}>
+            {aiSummaryLoading ? "Summarising…" : "✦ Summarise"}
+          </button>
+          <button style={s.btnAi} onClick={() => extractTasks(selected.id)} disabled={extractLoading}>
+            {extractLoading ? "Extracting…" : "✦ Extract tasks"}
+          </button>
+        </div>
+
+        {aiSummary && (
+          <section style={s.section}>
+            <div style={s.sectionLabel}>AI Summary</div>
+            <pre style={s.body}>{aiSummary}</pre>
+          </section>
+        )}
+
+        {extractedTasks && !extractedTasks.error && (
+          <section style={s.section}>
+            <div style={s.sectionLabel}>
+              Tasks created ({extractedTasks.created})
+            </div>
+            {extractedTasks.tasks.length === 0
+              ? <p style={s.muted}>No action items found in this recording.</p>
+              : extractedTasks.tasks.map((t, i) => (
+                <div key={i} style={s.taskRow}>
+                  <span style={{ ...s.priority, ...priorityColor(t.priority) }}>{t.priority}</span>
+                  <div>
+                    <div style={s.taskTitle}>{t.title}</div>
+                    {t.notes && <div style={s.taskNotes}>{t.notes}</div>}
+                  </div>
+                </div>
+              ))
+            }
+          </section>
+        )}
+        {extractedTasks?.error && <p style={s.error}>{extractedTasks.error}</p>}
 
         {detailLoading && <p style={s.muted}>Loading transcript…</p>}
 
@@ -164,6 +235,12 @@ const s = {
   sectionLabel: { fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--color-text-muted)", marginBottom: "8px" },
   body: { fontSize: "13px", lineHeight: 1.6, margin: 0 },
   transcript: { fontSize: "12px", lineHeight: 1.7, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, maxHeight: "420px", overflowY: "auto" },
+  aiRow: { display: "flex", gap: "8px" },
+  btnAi: { padding: "7px 14px", fontSize: "13px", background: "transparent", border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)", cursor: "pointer", color: "var(--color-text-muted)", whiteSpace: "nowrap" },
+  taskRow: { display: "flex", alignItems: "flex-start", gap: "10px", padding: "6px 0", borderBottom: "1px solid var(--color-border-light)" },
+  priority: { fontSize: "10px", fontWeight: 600, padding: "2px 7px", borderRadius: "10px", whiteSpace: "nowrap", marginTop: "2px" },
+  taskTitle: { fontSize: "13px", fontWeight: 500 },
+  taskNotes: { fontSize: "11px", color: "var(--color-text-muted)", marginTop: "2px", lineHeight: 1.4 },
   muted: { fontSize: "13px", color: "var(--color-text-muted)", margin: 0 },
   error: { fontSize: "13px", color: "#c0392b", margin: 0 },
 };
